@@ -1,16 +1,26 @@
 <?php
 
+require_once 'vendor/autoload.php';
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+// create a log channel
+$log = new Logger('printer-logs');
+
+$rawResponse = file_get_contents("php://input");
+// get the request body, which should be in json format, and parse it
+$parsed = json_decode($rawResponse, true);    
+
+$log->pushHandler(new StreamHandler(__DIR__ . '/logs/data.log', Logger::WARNING));
+// add records to the log
+$log->warning($rawResponse);
 
 function handleCloudPRNTPoll($db)
 {
-    // get the request body, which should be in json format, and parse it
-    $parsed = json_decode(file_get_contents("php://input"), true);
 
-    
-
-    $pollResponse = array();
-    $pollResponse['jobReady'] = false; // set jobReady to false by default, this is enough to provide the minimum cloudprnt response
+    // $pollResponse = array();
+    // $pollResponse['jobReady'] = false; // set jobReady to false by default, this is enough to provide the minimum cloudprnt response
     //$pollResponse['deleteMethod'] = "GET"; // set jobReady to false by default, this is enough to provide the minimum cloudprnt response
 
     // $deviceRegistered = setDeviceStatus($db, $parsed['printerMAC'], urldecode($parsed['statusCode']));
