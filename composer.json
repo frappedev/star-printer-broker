@@ -1,0 +1,14 @@
+{
+    "name": "frappe/star-printer-broker",
+    "description": "This is a package for Star Cloud Printers.",
+    "type": "library",
+    "require": {
+        "monolog/monolog": "^2.1"
+    },
+    "authors": [
+        {
+            "name": "Harpreet Singh",
+            "email": "thesinghharpreet@gmail.com"
+        }
+    ]
+}
