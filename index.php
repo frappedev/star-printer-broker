@@ -57,9 +57,16 @@ class StarCloudPrinterHandler {
 
     private function logIncomingRequests()
     {
-        if($this->logger) {
-            $this->logIntoLogger($this->payload);
+        if(!$this->logger) {
+            return false;
         }
+
+        if($this->isDeleteRequest()) {
+            $this->logIntoLogger("Delete Request Received");
+        }
+
+        $this->logIntoLogger($this->payload);
+
     }
 
     protected function isGetRequest()
@@ -70,6 +77,11 @@ class StarCloudPrinterHandler {
     protected function isPostRequest()
     {
         return $this->requestMethod == "post";
+    }
+
+    protected function isDeleteRequest()
+    {
+        return $this->requestMethod == "delete";
     }
 
     protected function isPrintJobRequest()
@@ -107,12 +119,17 @@ class StarCloudPrinterHandler {
     public function handlePrintRequest()
     {
         http_response_code(200);
-        // header('Content-Type: text/plain');
-        // print "Test Print from Our Printer Server";
-        header('Content-Type: image/png');
-        header('X-Star-Buzzerstartpattern: 1');
-        header('X-Star-Cut: partial; feed=true');
-        print file_get_contents(__DIR__."/Logo-Test.png");
+        header('Content-Type: text/plain');
+        print "Test Print from Our Printer Server";
+        print "Test Print from Our Printer Server";
+        print "Test Print from Our Printer Server";
+        print "Test Print from Our Printer Server";
+        print "Test Print from Our Printer Server";
+        print "Test Print from Our Printer Server";
+        // header('Content-Type: image/png');
+        // header('X-Star-Buzzerstartpattern: 1');
+        // header('X-Star-Cut: partial; feed=true');
+        // print file_get_contents(__DIR__."/Logo-Test.png");
     }
 
     public function handlePollingRequest()
