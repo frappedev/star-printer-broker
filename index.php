@@ -83,3 +83,11 @@ function handleCloudPRNTPoll($db)
     // header("Content-Type: application/json");
     // print_r(json_encode($pollResponse));
 }
+
+http_response_code(200);
+$response = [
+    'jobReady' => true,
+    'mediaTypes' => ['text/plain']
+];
+header('Content-Type: application/json');
+print json_encode($response);
