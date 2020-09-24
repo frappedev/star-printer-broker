@@ -13,6 +13,8 @@ class StarCloudPrinterHandler {
     private $payload;
     private $logger;
 
+    const PRINTING_LOCK_FILE = __DIR__."/.printinglock";
+
     public function __construct($config=[])
     {
         if($_SERVER['REQUEST_METHOD'] == "GET" || $_SERVER['REQUEST_METHOD'] == "get") {
@@ -24,6 +26,11 @@ class StarCloudPrinterHandler {
             $this->requestMethod = "post";
             $this->payload = json_decode(file_get_contents("php://input"), 1);
         }
+    }
+
+    private function isPrintingLocked()
+    {
+        return file_get_contents(self::PRINTING_LOCK_FILE) != "";
     }
 
     public function setLogger(Logger $logger, StreamHandler $streamHandler)
@@ -100,7 +107,7 @@ class StarCloudPrinterHandler {
     {
         http_response_code(200);
         $response = [
-            'jobReady' => true,
+            'jobReady' => !$this->isPrintingLocked(),
             'mediaTypes' => ['text/plain']
         ];
         header('Content-Type: application/json');
