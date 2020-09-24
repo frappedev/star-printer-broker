@@ -107,7 +107,12 @@ class StarCloudPrinterHandler {
     public function handlePrintRequest()
     {
         http_response_code(200);
-        print "Test Print from Our Printer Server";
+        // header('Content-Type: text/plain');
+        // print "Test Print from Our Printer Server";
+        header('Content-Type: image/png');
+        header('X-Star-Buzzerstartpattern: 1');
+        header('X-Star-Cut: partial; feed=true');
+        print file_get_contents(__DIR__."/Logo-Test.png");
     }
 
     public function handlePollingRequest()
@@ -115,7 +120,7 @@ class StarCloudPrinterHandler {
         http_response_code(200);
         $response = [
             'jobReady' => !$this->isPrintingLocked(),
-            'mediaTypes' => ['text/plain']
+            'mediaTypes' => ['text/plain', 'image/png']
         ];
         header('Content-Type: application/json');
         print json_encode($response);
