@@ -30,7 +30,9 @@ class StarCloudPrinterHandler {
 
     private function isPrintingLocked()
     {
-        return file_get_contents(self::PRINTING_LOCK_FILE) != "";
+        $lockContent = file_get_contents(self::PRINTING_LOCK_FILE);
+        $lockContent = preg_replace('/\s+/', '', $lockContent);
+        return $lockContent != "";
     }
 
     public function setLogger(Logger $logger, StreamHandler $streamHandler)
