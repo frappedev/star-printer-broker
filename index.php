@@ -9,12 +9,15 @@ use Monolog\Handler\StreamHandler;
 
 // create a log channel
 $log = new Logger('printer-logs');
+$log->pushHandler(new StreamHandler(__DIR__ . '/logs/data.log', Logger::WARNING));
+
+$getResponse = json_encode($_GET);
+$log->warning("Get Params : " . $getResponse);
 
 $rawResponse = file_get_contents("php://input");
 // get the request body, which should be in json format, and parse it
 $parsed = json_decode($rawResponse, true);    
 
-$log->pushHandler(new StreamHandler(__DIR__ . '/logs/data.log', Logger::WARNING));
 // add records to the log
 $log->warning($rawResponse);
 
