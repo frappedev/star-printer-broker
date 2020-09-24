@@ -120,7 +120,7 @@ class StarCloudPrinterHandler {
         http_response_code(200);
         $response = [
             'jobReady' => !$this->isPrintingLocked(),
-            'mediaTypes' => ['text/plain', 'image/png']
+            'mediaTypes' => ['image/png']
         ];
         header('Content-Type: application/json');
         print json_encode($response);
