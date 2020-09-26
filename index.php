@@ -3,6 +3,7 @@
 ini_set('display_errors', 1);
 
 require_once __DIR__.'/vendor/autoload.php';
+require_once __DIR__.'/db.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -15,8 +16,10 @@ class StarCloudPrinterHandler {
 
     const PRINTING_LOCK_FILE = __DIR__."/.printinglock";
 
-    public function __construct($config=[])
+    public function __construct(PrinttapldooDatabase $db, $config=[])
     {
+        $this->database = $db;
+        
         if($_SERVER['REQUEST_METHOD'] == "GET" || $_SERVER['REQUEST_METHOD'] == "get") {
             $this->requestMethod = "get";
             $this->payload = $_GET;
@@ -31,6 +34,7 @@ class StarCloudPrinterHandler {
             $this->requestMethod = "delete";
             $this->payload = array_merge($_GET, json_decode(file_get_contents("php://input"), 1));
         }
+
     }
 
     private function isPrintingLocked()
@@ -118,25 +122,58 @@ class StarCloudPrinterHandler {
 
     public function handlePrintRequest()
     {
-        http_response_code(200);
+        try {
+            $printerMacAddress = $this->getPrinterMacAddressFromPayload();
+            $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
+            if($pendingPrintInQueue) {
+                $httpResponseCode = 200;
+                $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
+                $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
+            } else {
+                $httpResponseCode = 404;
+                $printableText = "";
+            }
+        } catch(\Exception $e) {
+            $httpResponseCode = 404;
+            $printableText = "";
+            $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
+            $pendingPrintInQueue = null;
+        }
+        
+        http_response_code($httpResponseCode);
         header('Content-Type: text/plain');
-        print "Test Print from Our Printer Server";
-        print "Test Print from Our Printer Server";
-        print "Test Print from Our Printer Server";
-        print "Test Print from Our Printer Server";
-        print "Test Print from Our Printer Server";
-        print "Test Print from Our Printer Server";
+        echo $printableText;
         // header('Content-Type: image/png');
         // header('X-Star-Buzzerstartpattern: 1');
         // header('X-Star-Cut: partial; feed=true');
         // print file_get_contents(__DIR__."/Logo-Test.png");
     }
 
+    public function getPrinterMacAddressFromPayload()
+    {
+        if(isset($this->payload['printerMAC'])) {
+            return $this->payload['printerMAC'];
+        }
+        
+        if(isset($this->payload['mac'])) {
+            return $this->payload['mac'];
+        }
+
+        return false;
+    }
+
     public function handlePollingRequest()
     {
+        try {
+            $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
+        } catch(\Exception $e) {
+            $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
+            $pendingPrintInQueue = null;
+        }
+        
         http_response_code(200);
         $response = [
-            'jobReady' => !$this->isPrintingLocked(),
+            'jobReady' => !$this->isPrintingLocked() && $pendingPrintInQueue,
             'mediaTypes' => ['image/png']
         ];
         header('Content-Type: application/json');
@@ -144,7 +181,7 @@ class StarCloudPrinterHandler {
     }
 }
 
-$starCloudPrinter = new StarCloudPrinterHandler;
+$starCloudPrinter = new StarCloudPrinterHandler(new PrinttapldooDatabase);
 
 /* setting the loggers */
 $logSteamHandler = new StreamHandler(__DIR__ . '/logs/data.log', Logger::WARNING);
