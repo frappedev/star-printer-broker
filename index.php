@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 
 require_once __DIR__.'/vendor/autoload.php';
-require_once __DIR__.'/db.php';
+require_once __DIR__.'/db-updated.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -174,7 +174,10 @@ class StarCloudPrinterHandler {
         http_response_code(200);
         $response = [
             'jobReady' => !$this->isPrintingLocked() && $pendingPrintInQueue,
-            'mediaTypes' => ['image/png']
+            'mediaTypes' => ['image/png'],
+            'clientAction' => [                
+                [ "request" => "SetID", "options" => "HARPREET1232425"]
+            ],
         ];
         header('Content-Type: application/json');
         print json_encode($response);
