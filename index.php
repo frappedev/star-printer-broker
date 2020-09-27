@@ -165,20 +165,31 @@ class StarCloudPrinterHandler {
     public function handlePollingRequest()
     {
         try {
+            // $currentPrintInQueue = $this->database->printCurrentlyInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
             $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
         } catch(\Exception $e) {
             $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
-            $pendingPrintInQueue = null;
+            // $pendingPrintInQueue = null;
+            $currentPrintInQueue = null;
         }
         
         http_response_code(200);
+
+        $clientAction = [];
+
+        // if($pendingPrintInQueue) {
+        //     $clientAction = [
+        //         "request" => "SetID",
+        //         "options" => $pendingPrintInQueue
+        //     ];
+        // }
+        
         $response = [
             'jobReady' => !$this->isPrintingLocked() && $pendingPrintInQueue,
             'mediaTypes' => ['image/png'],
-            'clientAction' => [                
-                [ "request" => "SetID", "options" => "HARPREET1232425"]
-            ],
+            // 'clientAction' => $clientAction
         ];
+        
         header('Content-Type: application/json');
         print json_encode($response);
     }

@@ -8,6 +8,7 @@ class PrinttapldooDatabase {
     const PRINTER_QUEUE_TABLE = 'printer_queues';
     const PRINTERS_TABLE = 'printers';
     const PENDING_PRINT_STATUS = 0; 
+    const PRINTING_PRINT_STATUS = 1; 
     const DONE_PRINT_STATUS = 2; 
 
     public function __construct()
@@ -35,11 +36,36 @@ class PrinttapldooDatabase {
         return $result;
     }
 
+    public function printCurrentlyInQueueForMacAddress($macAddress)
+    {
+        $query = "SELECT " .
+        self::PRINTERS_TABLE . ".mac_address, " .
+        self::PRINTER_QUEUE_PIVOT_TABLE . ".*, " .
+        self::PRINTER_QUEUE_TABLE. ".* ".
+        " FROM " . self::PRINTER_QUEUE_TABLE . 
+        " INNER JOIN " . self::PRINTER_QUEUE_PIVOT_TABLE .
+        " ON " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_queue_id = " . self::PRINTER_QUEUE_TABLE . ".id ".
+        " INNER JOIN " . self::PRINTERS_TABLE . 
+        " ON " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_id = " . self::PRINTERS_TABLE . ".id ".
+        " WHERE " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printing_status=" . self::PRINTING_PRINT_STATUS .
+        " AND " . self::PRINTERS_TABLE . ".mac_address='" . $macAddress . "' ORDER BY " . self::PRINTER_QUEUE_TABLE . ".position ASC LIMIT 1";
+
+        $result = $this->query($query);
+
+        $printQueue = $result->fetch_assoc();
+
+        if($printQueue) {
+            return $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
+        }
+
+        return false;
+    }
+
     public function pendingPrintInQueueForMacAddress($macAddress)
     {
         $query = "SELECT " .
         self::PRINTERS_TABLE . ".mac_address, " .
-        self::PRINTER_QUEUE_PIVOT_TABLE . ".printing_status, " .
+        self::PRINTER_QUEUE_PIVOT_TABLE . ".*, " .
         self::PRINTER_QUEUE_TABLE. ".* ".
         " FROM " . self::PRINTER_QUEUE_TABLE . 
         " INNER JOIN " . self::PRINTER_QUEUE_PIVOT_TABLE .
@@ -51,7 +77,15 @@ class PrinttapldooDatabase {
 
         $result = $this->query($query);
 
-        return $result->fetch_assoc();
+        $printQueue = $result->fetch_assoc();
+
+        if($printQueue) {
+            $id = $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
+
+            return $id;
+        }
+
+        return false;
     }
 
     public function markPrinterQueueDoneByMacAddress($macAddress)
