@@ -32,7 +32,7 @@ class StarCloudPrinterHandler {
 
         if($_SERVER['REQUEST_METHOD'] == "DELETE" || $_SERVER['REQUEST_METHOD'] == "delete") {
             $this->requestMethod = "delete";
-            $this->payload = array_merge($_GET, json_decode(file_get_contents("php://input"), 1));
+            $this->payload = array_merge($_GET, $_POST, json_decode(file_get_contents("php://input") == "" ? "[]" : file_get_contents("php://input"), 1));
         }
 
     }
