@@ -79,13 +79,15 @@ class PrinttapldooDatabase {
 
         $printQueue = $result->fetch_assoc();
 
-        if($printQueue) {
-            $id = $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
+        return $printQueue;
 
-            return $id;
-        }
+        // if($printQueue) {
+        //     $id = $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
 
-        return false;
+        //     return $id;
+        // }
+
+        // return false;
     }
 
     public function markPrinterQueueDoneByMacAddress($macAddress)

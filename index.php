@@ -175,7 +175,7 @@ class StarCloudPrinterHandler {
         
         http_response_code(200);
 
-        $clientAction = [];
+        // $clientAction = [];
 
         // if($pendingPrintInQueue) {
         //     $clientAction = [
