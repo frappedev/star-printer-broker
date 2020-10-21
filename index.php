@@ -132,7 +132,7 @@ class StarCloudPrinterHandler {
             // $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
             // $pendingPrintInQueue = null;
         }
-        $this->database->lockPrinter();
+        // $this->database->lockPrinter();
 
         $markUpFile = __DIR__."/example-docket.stm";
         $convertedFile = __DIR__."/outputdata.bin";
