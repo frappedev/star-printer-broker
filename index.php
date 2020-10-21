@@ -139,7 +139,7 @@ class StarCloudPrinterHandler {
 
         $command = $this->database->getCputilPath() . " " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile;
 
-        exec($command);
+        shell_exec($command);
         $this->logIntoLogger("This is the convert command: " . $command);
         
         $printableText = file_get_contents($convertedFile);
@@ -192,7 +192,7 @@ class StarCloudPrinterHandler {
 
         $command = $this->database->getCputilPath() . " mediatypes " . $printableFile;
         $this->logIntoLogger("This is media types command: " . $command);
-        $printableFormats = exec($command);
+        $printableFormats = shell_exec($command);
         $this->logIntoLogger($printableFormats);
 
         if($printableFormats != "") {
