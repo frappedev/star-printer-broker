@@ -137,7 +137,7 @@ class StarCloudPrinterHandler {
         $markUpFile = __DIR__."/example-docket.stm";
         $convertedFile = __DIR__."/outputdata.bin";
 
-        exec("/usr/local/share/cputil-osx-x64_v110/cputil-osx-x64/cputil " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile);
+        exec($this->database->getCputilPath() . " " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile);
         
         $printableText = file_get_contents($convertedFile);
         
@@ -188,7 +188,7 @@ class StarCloudPrinterHandler {
         $printableFile = __DIR__."/example-docket.stm";
         $output= [];
 
-        $printableFormats = exec("/usr/local/share/cputil-osx-x64_v110/cputil-osx-x64/cputil mediatypes " . $printableFile, $output);
+        $printableFormats = exec($this->database->getCputilPath() . " mediatypes " . $printableFile, $output);
        
         if($printableFormats != "") {
             $printableFormats = json_decode($printableFormats);

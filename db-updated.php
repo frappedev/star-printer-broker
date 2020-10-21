@@ -2,6 +2,7 @@
 
 class PrinttapldooDatabase {
 
+    protected $config;
     protected $conn;
 
     const PRINTER_QUEUE_PIVOT_TABLE = 'printer_printer_queue_pivot';
@@ -15,16 +16,21 @@ class PrinttapldooDatabase {
 
     public function __construct()
     {
-        $config = require_once __DIR__.'/db-config.php';
+        $this->config = require_once __DIR__.'/db-config.php';
         $this->conn = new mysqli(
-            $config['host'],
-            $config['username'],
-            $config['password'],
-            $config['database']
+            $this->config['host'],
+            $this->config['username'],
+            $this->config['password'],
+            $this->config['database']
         );
         if ($this->conn->connect_errno) {
             throw new \Exception("MySQL connection failed!");
         }
+    }
+
+    public function getCputilPath()
+    {
+        return $this->config["cputil_path"];
     }
 
     public function query($query)
