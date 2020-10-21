@@ -1,4 +1,4 @@
 /vendor/
 db-config.php
-output.bin
+outputdata.bin
 .printinglock
