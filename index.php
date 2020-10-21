@@ -123,25 +123,27 @@ class StarCloudPrinterHandler {
     public function handlePrintRequest()
     {
         try {
-            $printerMacAddress = $this->getPrinterMacAddressFromPayload();
-            $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
-            if($pendingPrintInQueue) {
+            // $printerMacAddress = $this->getPrinterMacAddressFromPayload();
+            // $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
+            // if($pendingPrintInQueue) {
                 $httpResponseCode = 200;
-                $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
-                $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
-            } else {
-                $httpResponseCode = 404;
-                $printableText = "";
-            }
+            //     $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
+            //     $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
+            // } else {
+            //     $httpResponseCode = 404;
+            //     $printableText = "";
+            // }
         } catch(\Exception $e) {
-            $httpResponseCode = 404;
-            $printableText = "";
-            $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
-            $pendingPrintInQueue = null;
+            // $httpResponseCode = 404;
+            // $printableText = "";
+            // $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
+            // $pendingPrintInQueue = null;
         }
+
+        $printableText = file_get_contents(__DIR__.'/outputdata.bin');
         
         http_response_code($httpResponseCode);
-        header('Content-Type: text/plain');
+        header('Content-Type: application/vnd.star.starprnt');
         echo $printableText;
         // header('Content-Type: image/png');
         // header('X-Star-Buzzerstartpattern: 1');
