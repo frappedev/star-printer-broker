@@ -137,7 +137,7 @@ class StarCloudPrinterHandler {
         $markUpFile = __DIR__."/example-docket.stm";
         $convertedFile = __DIR__."/outputdata.bin";
 
-        $command = $this->database->getCputilPath() . " " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile;
+        $command = $this->database->getCputilPath() . " decode " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile;
 
         $command .= " 2>&1";
 
