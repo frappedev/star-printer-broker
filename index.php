@@ -193,14 +193,17 @@ class StarCloudPrinterHandler {
         $command = $this->database->getCputilPath() . " mediatypes " . $printableFile;
         $this->logIntoLogger("This is media types command: " . $command);
         $printableFormats = exec($command);
+        $this->logIntoLogger($printableFormats);
 
         if($printableFormats != "") {
             $printableFormats = json_decode($printableFormats);
         }
+        $this->logIntoLogger($printableFormats);
+
 
         $response = [
             'jobReady' => !$this->database->isPrintingLocked() && $pendingPrintInQueue,
-            'mediaTypes' => $printableFormats,
+            'mediaTypes' => $printableFormats
             // 'clientAction' => $clientAction
         ];
         
