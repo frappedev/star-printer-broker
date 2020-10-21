@@ -107,7 +107,7 @@ class PrinttapldooDatabase {
 
     public function lockPrinter()
     {
-        file_put_contents(self::PRINTING_LOCK_FILE, "1");
+        file_put_contents(self::PRINTING_LOCK_FILE, "hello");
         return true;
     }
 

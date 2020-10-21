@@ -137,7 +137,10 @@ class StarCloudPrinterHandler {
         $markUpFile = __DIR__."/example-docket.stm";
         $convertedFile = __DIR__."/outputdata.bin";
 
-        exec($this->database->getCputilPath() . " " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile);
+        $command = $this->database->getCputilPath() . " " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile;
+
+        exec($command);
+        $this->logIntoLogger("This is the convert command: " . $command);
         
         $printableText = file_get_contents($convertedFile);
         
@@ -186,13 +189,15 @@ class StarCloudPrinterHandler {
         // }
 
         $printableFile = __DIR__."/example-docket.stm";
-        $output= [];
 
-        $printableFormats = exec($this->database->getCputilPath() . " mediatypes " . $printableFile, $output);
-       
+        $command = $this->database->getCputilPath() . " mediatypes " . $printableFile;
+        $this->logIntoLogger("This is media types command: " . $command);
+        $printableFormats = exec($command);
+
         if($printableFormats != "") {
             $printableFormats = json_decode($printableFormats);
         }
+
         $response = [
             'jobReady' => !$this->database->isPrintingLocked() && $pendingPrintInQueue,
             'mediaTypes' => $printableFormats,
