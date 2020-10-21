@@ -147,7 +147,7 @@ class StarCloudPrinterHandler {
         $printableText = file_get_contents($convertedFile);
         
         http_response_code($httpResponseCode);
-        header('Content-Type: application/vnd.star.starprnt');
+        header('Content-Type: ' . $this->payload['type']);
         echo $printableText;
         // header('Content-Type: image/png');
         // header('X-Star-Buzzerstartpattern: 1');
