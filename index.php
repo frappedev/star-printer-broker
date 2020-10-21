@@ -37,13 +37,6 @@ class StarCloudPrinterHandler {
 
     }
 
-    private function isPrintingLocked()
-    {
-        $lockContent = file_get_contents(self::PRINTING_LOCK_FILE);
-        $lockContent = preg_replace('/\s+/', '', $lockContent);
-        return $lockContent != "";
-    }
-
     public function setLogger(Logger $logger, StreamHandler $streamHandler)
     {
         $this->logger = $logger;
@@ -139,8 +132,14 @@ class StarCloudPrinterHandler {
             // $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
             // $pendingPrintInQueue = null;
         }
+        $this->database->lockPrinter();
 
-        $printableText = file_get_contents(__DIR__.'/outputdata.bin');
+        $markUpFile = __DIR__."/example-docket.stm";
+        $convertedFile = __DIR__."/outputdata.bin";
+
+        exec("/usr/local/share/cputil-osx-x64_v110/cputil-osx-x64/cputil " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile);
+        
+        $printableText = file_get_contents($convertedFile);
         
         http_response_code($httpResponseCode);
         header('Content-Type: application/vnd.star.starprnt');
@@ -166,9 +165,9 @@ class StarCloudPrinterHandler {
 
     public function handlePollingRequest()
     {
+        $pendingPrintInQueue = true;
         try {
             // $currentPrintInQueue = $this->database->printCurrentlyInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
-            $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
         } catch(\Exception $e) {
             $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
             // $pendingPrintInQueue = null;
@@ -185,10 +184,18 @@ class StarCloudPrinterHandler {
         //         "options" => $pendingPrintInQueue
         //     ];
         // }
-        
+
+        $printableFile = __DIR__."/example-docket.stm";
+        $output= [];
+
+        $printableFormats = exec("/usr/local/share/cputil-osx-x64_v110/cputil-osx-x64/cputil mediatypes " . $printableFile, $output);
+       
+        if($printableFormats != "") {
+            $printableFormats = json_decode($printableFormats);
+        }
         $response = [
-            'jobReady' => !$this->isPrintingLocked() && $pendingPrintInQueue,
-            'mediaTypes' => ['image/png'],
+            'jobReady' => !$this->database->isPrintingLocked() && $pendingPrintInQueue,
+            'mediaTypes' => $printableFormats,
             // 'clientAction' => $clientAction
         ];
         

@@ -11,6 +11,8 @@ class PrinttapldooDatabase {
     const PRINTING_PRINT_STATUS = 1; 
     const DONE_PRINT_STATUS = 2; 
 
+    const PRINTING_LOCK_FILE = __DIR__."/.printinglock";
+
     public function __construct()
     {
         $config = require_once __DIR__.'/db-config.php';
@@ -81,13 +83,32 @@ class PrinttapldooDatabase {
 
         return $printQueue;
 
-        // if($printQueue) {
-        //     $id = $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
+        if($printQueue) {
+            $id = $printQueue['printer_id'] . "-" . $printQueue['printer_queue_id'];
 
-        //     return $id;
-        // }
+            return $id;
+        }
 
-        // return false;
+        return false;
+    }
+
+    public function isPrintingLocked()
+    {
+        $lockContent = file_get_contents(self::PRINTING_LOCK_FILE);
+        $lockContent = preg_replace('/\s+/', '', $lockContent);
+        return $lockContent != "";
+    }
+
+    public function lockPrinter()
+    {
+        file_put_contents(self::PRINTING_LOCK_FILE, "1");
+        return true;
+    }
+
+    public function unlockPrinter()
+    {
+        file_put_contents(self::PRINTING_LOCK_FILE, "");
+        return true;
     }
 
     public function markPrinterQueueDoneByMacAddress($macAddress)
