@@ -180,29 +180,38 @@ class StarCloudPrinterHandler {
 
     public function handlePrintRequest()
     {
+        $printableData = "";
+
         try {
             $printerMacAddress = $this->getPrinterMacAddressFromPayload();
             $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
             if($pendingPrintInQueue) {
                 $httpResponseCode = 200;
-                $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
+
+                // Convert the Markup Docket to 
+                $this->convertMarkupToBinaryDocket($pendingPrintInQueue['id'], $this->payload['type']);
+
+                // Get the converted Binary file
+                $printableData = $this->getBinaryDocket($pendingPrintInQueue['id']);
+                // $printableData = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
+                
                 $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
+            
             } else {
                 $httpResponseCode = 404;
-                $printableText = "";
+                $printableData = "";
             }
         } catch(\Exception $e) {
             $httpResponseCode = 404;
-            $printableText = "";
+            $printableData = "";
             $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
             $pendingPrintInQueue = null;
         }
 
-        $printableText = $this->getBinaryDocket($convertedFile);
-        
+
         http_response_code($httpResponseCode);
         header('Content-Type: ' . $this->payload['type']);
-        echo $printableText;
+        echo $printableData;
     }
 
     public function getPrinterMacAddressFromPayload()
@@ -234,7 +243,7 @@ class StarCloudPrinterHandler {
         $printableFormats = [];
 
         if($currentPrintInQueue) {
-            $this->addMarkupDocket($currentPrintInQueue->id, $currentPrintInQueue->content);
+            $this->addMarkupDocket($currentPrintInQueue['id'], $currentPrintInQueue['content']);
             $printableFormats = $this->getSupportedPrintFormatsForDocket($currentPrintInQueue->id);
         }
 
