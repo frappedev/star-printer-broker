@@ -149,7 +149,11 @@ class StarCloudPrinterHandler {
         $output = shell_exec($command);
         
         if($output != "") {
-            return json_decode($output);
+            $printableFormats = json_decode($output);
+            if(is_array($printableFormats)) {
+                return $printableFormats;
+            }
+            $this->logIntoLogger("Error in Fetching Formats: " . $output);
         }
         return [];
     }
