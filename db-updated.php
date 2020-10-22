@@ -74,7 +74,9 @@ class PrinttapldooDatabase {
         $query = "SELECT " .
         self::PRINTERS_TABLE . ".mac_address, " .
         self::PRINTER_QUEUE_PIVOT_TABLE . ".*, " .
-        self::PRINTER_QUEUE_TABLE. ".* ".
+        self::PRINTER_QUEUE_TABLE. ".id, ".
+        self::PRINTER_QUEUE_TABLE. ".position, ".
+        self::PRINTER_QUEUE_TABLE. ".content ".
         " FROM " . self::PRINTER_QUEUE_TABLE . 
         " INNER JOIN " . self::PRINTER_QUEUE_PIVOT_TABLE .
         " ON " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_queue_id = " . self::PRINTER_QUEUE_TABLE . ".id ".

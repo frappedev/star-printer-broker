@@ -121,8 +121,12 @@ class StarCloudPrinterHandler {
     private function addMarkupDocket($printId, $content)
     {
         $file = "docket-" . $printId .".stm";
+
+        $path = self::MARKUP_DOCKETS_FOLDER . $file;
+
+        $this->logIntoLogger($path);
         
-        file_put_contents(self::MARKUP_DOCKETS_FOLDER . $file, $content);
+        file_put_contents($path, $content);
 
         return $file;
     }
@@ -172,8 +176,9 @@ class StarCloudPrinterHandler {
     /**
      * 
      */
-    private function getBinaryDocket($file)
+    private function getBinaryDocket($printId)
     {
+        $file = "docket-" . $printId .".bin";
         $path = self::BINARY_DOCKETS_FOLDER . $file;
         return file_get_contents($path);
     }
@@ -230,11 +235,9 @@ class StarCloudPrinterHandler {
     public function handlePollingRequest()
     {
         try {
-            $currentPrintInQueue = $this->database->printCurrentlyInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
-            $pendingPrintInQueue = true;
+            $currentPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
         } catch(\Exception $e) {
             $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
-            $pendingPrintInQueue = null;
             $currentPrintInQueue = null;
         }
         
@@ -242,13 +245,16 @@ class StarCloudPrinterHandler {
 
         $printableFormats = [];
 
+        // var_dump($currentPrintInQueue);
+        // die();
+
         if($currentPrintInQueue) {
             $this->addMarkupDocket($currentPrintInQueue['id'], $currentPrintInQueue['content']);
-            $printableFormats = $this->getSupportedPrintFormatsForDocket($currentPrintInQueue->id);
+            $printableFormats = $this->getSupportedPrintFormatsForDocket($currentPrintInQueue['id']);
         }
 
         $response = [
-            'jobReady' => !$this->database->isPrintingLocked() && $pendingPrintInQueue,
+            'jobReady' => !$this->database->isPrintingLocked() && $currentPrintInQueue,
             'mediaTypes' => $printableFormats
         ];
         
