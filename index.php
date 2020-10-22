@@ -15,6 +15,8 @@ class StarCloudPrinterHandler {
     private $logger;
 
     const PRINTING_LOCK_FILE = __DIR__."/.printinglock";
+    const BINARY_DOCKETS_FOLDER = __DIR__."/printables/binary-dockets/";
+    const MARKUP_DOCKETS_FOLDER = __DIR__."/printables/markup-dockets/";
 
     public function __construct(PrinttapldooDatabase $db, $config=[])
     {
@@ -113,46 +115,94 @@ class StarCloudPrinterHandler {
 
     }
 
+    /**
+     * @return string path of the printable file
+     */
+    private function addMarkupDocket($printId, $content)
+    {
+        $file = "docket-" . $printId .".stm";
+        
+        file_put_contents(self::MARKUP_DOCKETS_FOLDER . $file, $content);
+
+        return $file;
+    }
+
+    /**
+     * 
+     */
+    private function getMarkupDocket($file)
+    {
+        $path = self::MARKUP_DOCKETS_FOLDER . $file;
+        return file_get_contents($path);
+    }
+
+    private function getSupportedPrintFormatsForDocket($printId)
+    {
+        $file = "docket-" . $printId .".stm";
+        $pathToMarkUpDocket = self::MARKUP_DOCKETS_FOLDER . $file;
+        $command = $this->database->getCputilPath() . " mediatypes " . $pathToMarkUpDocket;
+        $command .= " 2>&1";
+        $output = shell_exec($command);
+        
+        if($output != "") {
+            return json_decode($output);
+        }
+        return [];
+    }
+
+    /**
+     * 
+     */
+    private function convertMarkupToBinaryDocket($printId, $binaryFormatForConversion)
+    {
+        $file = "docket-" . $printId .".stm";
+        $convertedFile = "docket-" . $printId .".bin";
+
+        $pathToMarkUpDocket = self::MARKUP_DOCKETS_FOLDER . $file;
+        $fullPathConvertedFile = self::BINARY_DOCKETS_FOLDER . $convertedFile;
+
+        $command = $this->database->getCputilPath() . " decode " . $binaryFormatForConversion . " " . $pathToMarkUpDocket . " " .$fullPathConvertedFile;
+        $command .= " 2>&1";
+        
+        shell_exec($command);
+
+        return $convertedFile;
+    }
+
+    /**
+     * 
+     */
+    private function getBinaryDocket($file)
+    {
+        $path = self::BINARY_DOCKETS_FOLDER . $file;
+        return file_get_contents($path);
+    }
+
     public function handlePrintRequest()
     {
         try {
-            // $printerMacAddress = $this->getPrinterMacAddressFromPayload();
-            // $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
-            // if($pendingPrintInQueue) {
+            $printerMacAddress = $this->getPrinterMacAddressFromPayload();
+            $pendingPrintInQueue = $this->database->pendingPrintInQueueForMacAddress($printerMacAddress);
+            if($pendingPrintInQueue) {
                 $httpResponseCode = 200;
-            //     $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
-            //     $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
-            // } else {
-            //     $httpResponseCode = 404;
-            //     $printableText = "";
-            // }
+                $printableText = $pendingPrintInQueue['header'] . "\n\n" . $pendingPrintInQueue['content'] . "\n\n" . $pendingPrintInQueue['footer'];
+                $this->database->markPrinterQueueDoneByMacAddress($printerMacAddress);
+            } else {
+                $httpResponseCode = 404;
+                $printableText = "";
+            }
         } catch(\Exception $e) {
-            // $httpResponseCode = 404;
-            // $printableText = "";
-            // $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
-            // $pendingPrintInQueue = null;
+            $httpResponseCode = 404;
+            $printableText = "";
+            $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
+            $pendingPrintInQueue = null;
         }
-        // $this->database->lockPrinter();
 
-        $markUpFile = __DIR__."/example-docket.stm";
-        $convertedFile = __DIR__."/outputdata.bin";
-
-        $command = $this->database->getCputilPath() . " decode " . $this->payload['type'] . " " . $markUpFile . " " .$convertedFile;
-
-        $command .= " 2>&1";
-
-        shell_exec($command);
-        $this->logIntoLogger("This is the convert command: " . $command);
-        
-        $printableText = file_get_contents($convertedFile);
+        $printableText = $this->getBinaryDocket($convertedFile);
         
         http_response_code($httpResponseCode);
         header('Content-Type: ' . $this->payload['type']);
         echo $printableText;
-        // header('Content-Type: image/png');
-        // header('X-Star-Buzzerstartpattern: 1');
-        // header('X-Star-Cut: partial; feed=true');
-        // print file_get_contents(__DIR__."/Logo-Test.png");
     }
 
     public function getPrinterMacAddressFromPayload()
@@ -170,46 +220,27 @@ class StarCloudPrinterHandler {
 
     public function handlePollingRequest()
     {
-        $pendingPrintInQueue = true;
         try {
-            // $currentPrintInQueue = $this->database->printCurrentlyInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
+            $currentPrintInQueue = $this->database->printCurrentlyInQueueForMacAddress($this->getPrinterMacAddressFromPayload());
+            $pendingPrintInQueue = true;
         } catch(\Exception $e) {
             $this->logIntoLogger("Query Database Exception: " . $e->getMessage());
-            // $pendingPrintInQueue = null;
+            $pendingPrintInQueue = null;
             $currentPrintInQueue = null;
         }
         
         http_response_code(200);
 
-        // $clientAction = [];
+        $printableFormats = [];
 
-        // if($pendingPrintInQueue) {
-        //     $clientAction = [
-        //         "request" => "SetID",
-        //         "options" => $pendingPrintInQueue
-        //     ];
-        // }
-
-        $printableFile = __DIR__."/example-docket.stm";
-
-        $command = $this->database->getCputilPath() . " mediatypes " . $printableFile;
-
-        $command .= " 2>&1";
-
-        $this->logIntoLogger("This is media types command: " . $command);
-        $printableFormats = shell_exec($command);
-        $this->logIntoLogger($printableFormats);
-
-        if($printableFormats != "") {
-            $printableFormats = json_decode($printableFormats);
+        if($currentPrintInQueue) {
+            $this->addMarkupDocket($currentPrintInQueue->id, $currentPrintInQueue->content);
+            $printableFormats = $this->getSupportedPrintFormatsForDocket($currentPrintInQueue->id);
         }
-        $this->logIntoLogger($printableFormats);
-
 
         $response = [
             'jobReady' => !$this->database->isPrintingLocked() && $pendingPrintInQueue,
             'mediaTypes' => $printableFormats
-            // 'clientAction' => $clientAction
         ];
         
         header('Content-Type: application/json');
