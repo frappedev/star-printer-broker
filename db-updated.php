@@ -121,13 +121,16 @@ class PrinttapldooDatabase {
 
     public function markPrinterQueueDoneByMacAddress($macAddress)
     {
-        $query = "UPDATE " . self::PRINTER_QUEUE_TABLE .
-        " INNER JOIN " . self::PRINTER_QUEUE_PIVOT_TABLE .
-        " ON " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_queue_id = " . self::PRINTER_QUEUE_TABLE . ".id ".
-        " INNER JOIN " . self::PRINTERS_TABLE . 
-        " ON " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_id = " . self::PRINTERS_TABLE . ".id ".
-        " SET " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printing_status=" . self::DONE_PRINT_STATUS . " WHERE " . self::PRINTERS_TABLE . ".mac_address = '" . $macAddress . "'";
-        return $this->query($query);
+        $pendingPrintQueue = $this->pendingPrintInQueueForMacAddress($macAddress);
+
+        if($pendingPrintQueue) {
+            $query = "UPDATE " . self::PRINTER_QUEUE_PIVOT_TABLE . " SET " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printing_status=" . self::DONE_PRINT_STATUS . "  WHERE " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_id=" . $pendingPrintQueue['printer_id'] . " AND " . self::PRINTER_QUEUE_PIVOT_TABLE . ".printer_queue_id=" .$pendingPrintQueue['printer_queue_id'];
+            
+            return $this->query($query);
+        }
+
+        return false;
+
     }
 
 }
